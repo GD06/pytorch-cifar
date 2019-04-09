@@ -12,6 +12,7 @@ import torchvision.transforms as transforms
 
 import os
 import argparse
+import pickle 
 
 from models import *
 from utils import progress_bar
@@ -112,7 +113,7 @@ print('==> Building model..')
 net = _build_network(args.model)
 net = net.to(device)
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
+    # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
 if args.resume:
@@ -134,6 +135,8 @@ def train(epoch):
     train_loss = 0
     correct = 0
     total = 0
+    num_batches = 0
+
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
@@ -146,9 +149,13 @@ def train(epoch):
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
+        num_batches += 1
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
+    # print('Loss: ', train_loss / num_batches)
+    return (train_loss / num_batches)
 
 def test(epoch):
     global best_acc
@@ -184,7 +191,21 @@ def test(epoch):
         torch.save(state, os.path.join(checkpoint_dir, 'ckpt.t7'))
         best_acc = acc
 
+    return acc 
+
+training_curve = []
 for epoch in range(start_epoch, start_epoch + args.num_epoches):
-    train(epoch)
-    test(epoch)
+    epoch_loss = train(epoch)
+    epoch_acc = test(epoch)
+    training_curve.append({
+        'epoch': epoch,
+        'loss': epoch_loss,
+        'acc': epoch_acc
+    })
+
+if not os.path.isdir(checkpoint_dir):
+    os.makedirs(checkpoint_dir) 
+with open(os.path.join(checkpoint_dir, 
+    'loss_acc_{}_{}'.format(start_epoch, start_epoch + args.num_epoches)), 'wb') as f:
+    pickle.dump(training_curve, f) 
 
