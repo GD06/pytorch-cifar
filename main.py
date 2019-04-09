@@ -179,7 +179,8 @@ def test(epoch):
 
     # Save checkpoint.
     acc = 100.*correct/total
-    if acc > best_acc:
+    #if acc > best_acc:
+    if (epoch % 10) == 0: # Save the model every 10 epoches
         print('Saving..')
         state = {
             'net': net.state_dict(),
