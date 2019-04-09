@@ -1,3 +1,5 @@
 *.py.bak
 *.pyc
 __pycache__/*
+checkpoint/*
+data/*
