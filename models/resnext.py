@@ -90,6 +90,6 @@ def test_resnext():
     net = ResNeXt29_2x64d()
     x = torch.randn(1,3,32,32)
     y = net(x)
-    print(y.size())
+    print((y.size()))
 
 # test_resnext()

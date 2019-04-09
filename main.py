@@ -1,5 +1,5 @@
 '''Train CIFAR10 with PyTorch.'''
-from __future__ import print_function
+
 
 import torch
 import torch.nn as nn
@@ -16,6 +16,8 @@ import argparse
 from models import *
 from utils import progress_bar
 
+work_dir = os.path.dirname(os.path.realpath(__file__))
+os.chdir(work_dir)
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
