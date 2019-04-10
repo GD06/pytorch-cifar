@@ -23,6 +23,8 @@ def _build_network(model_name):
         net = VGG('VGG16')
     elif model_name == 'ResNet18':
         net = ResNet18()
+    elif model_name == 'ResNet34':
+        net = ResNet34() 
     elif model_name == 'ResNet50':
         net = ResNet50() 
     elif model_name == 'ResNet101':
