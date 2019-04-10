@@ -131,9 +131,13 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
+        
+        with torch.no_grad():
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+
+        net.sub_backward(targets) 
+        #loss.backward()
         optimizer.step()
 
         train_loss += loss.item()
@@ -171,7 +175,7 @@ def test(epoch):
     # Save checkpoint.
     acc = 100.*correct/total
     #if acc > best_acc:
-    if (epoch % 10) == 0: # Save the model every 10 epoches
+    if ((epoch + 1) % 10) == 0: # Save the model every 10 epoches
         print('Saving..')
         state = {
             'net': net.state_dict(),

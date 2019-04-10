@@ -9,6 +9,7 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable 
 
 
 class BasicBlock(nn.Module):
@@ -109,6 +110,8 @@ class SubResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.linear = nn.Linear(512*block.expansion, num_classes)
 
+        self._inter_var = []
+
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
@@ -118,15 +121,56 @@ class SubResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        self._inter_var.clear() 
+        self._inter_var.append(Variable(x.data, requires_grad=True))
         out = F.relu(self.bn1(self.conv1(x)))
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         out = self.layer1(out)
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         out = self.layer2(out)
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         out = self.layer3(out)
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         out = self.layer4(out)
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
+
+        self._inter_var.append(Variable(out.data, requires_grad=True))
         return out 
+
+    def sub_backward(self, targets):
+        criterion = nn.CrossEntropyLoss()
+        loss = criterion(self._inter_var[-1], targets) 
+        loss.backward()
+
+        back_var = F.avg_pool2d(self._inter_var[-2], 4)
+        back_var = back_var.view(back_var.size(0), -1)
+        back_var = self.linear(back_var)
+        back_var.backward(self._inter_var[-1].grad)
+
+        back_var = self.layer4(self._inter_var[-3])
+        back_var.backward(self._inter_var[-2].grad)
+
+        back_var = self.layer3(self._inter_var[-4])
+        back_var.backward(self._inter_var[-3].grad)
+
+        back_var = self.layer2(self._inter_var[-5])
+        back_var.backward(self._inter_var[-4].grad)
+
+        back_var = self.layer1(self._inter_var[-6])
+        back_var.backward(self._inter_var[-5].grad)
+
+        back_var = F.relu(self.bn1(self.conv1(self._inter_var[-7])))
+        back_var.backward(self._inter_var[-6].grad)
+        return 
+
 
 def SubResNet18():
     return SubResNet(BasicBlock, [2,2,2,2])
