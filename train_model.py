@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+#--- coding: utf-8 ---
+
 '''Train CIFAR10 with PyTorch.'''
 
 
@@ -33,6 +36,8 @@ def _build_network(model_name):
         net = MobileNetV2()
     elif model_name == 'GoogLeNet':
         net = GoogLeNet()
+    elif model_name == 'SubResNet18':
+        net = SubResNet18() 
 
     assert net != None
     return net 
@@ -55,6 +60,8 @@ parser.add_argument('model', help='the name of model to be trained')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', 
         help='resume from checkpoint')
+parser.add_argument('--sublinear', '-s', action='store_true',
+        help='train the model in the sublinear mdoe.')
 parser.add_argument('--checkpoint_dir', default=None, help='the directory of'
         ' checkpoint models')
 parser.add_argument('--data_dir', default=None, help='the directory storing data')
@@ -62,11 +69,13 @@ parser.add_argument('--num_epoches', default=10, type=int, help='the number of'
         ' epoches for training')
 parser.add_argument('--batchsize', default=128, type=int, help='the batch size of'
         ' each training iteration')
+parser.add_argument('--gpu_id', default=0, type=int, help='the GPU to train the model')
 
 args = parser.parse_args()
 
 work_dir = os.path.dirname(os.path.realpath(__file__))
 os.chdir(work_dir)
+os.environ['CUDA_VISIBLE_DEVICES']=str(args.gpu_id)
 
 if args.checkpoint_dir is None:
     checkpoint_dir = os.path.join(work_dir, "checkpoint", args.model)
@@ -122,10 +131,10 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load(os.path.join(checkpoint_dir, 'ckpt.t7'))
+    checkpoint = torch.load(os.path.join(checkpoint_dir, 'ckpt.{}'.format(args.sublinear==True)))
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
+    start_epoch = checkpoint['epoch'] + 1
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -142,9 +151,17 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
+
+        if args.sublinear:
+            with torch.no_grad():
+                outputs = net(inputs)
+                loss = criterion(outputs, targets)
+            net.sub_backward(targets)
+        else:
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+        
         optimizer.step()
 
         train_loss += loss.item()
@@ -191,7 +208,7 @@ def test(epoch):
         }
         if not os.path.isdir(checkpoint_dir):
             os.makedirs(checkpoint_dir)
-        torch.save(state, os.path.join(checkpoint_dir, 'ckpt.t7'))
+        torch.save(state, os.path.join(checkpoint_dir, 'ckpt.{}'.format(args.sublinear==True)))
         best_acc = acc
 
     return acc 
@@ -209,6 +226,6 @@ for epoch in range(start_epoch, start_epoch + args.num_epoches):
 if not os.path.isdir(checkpoint_dir):
     os.makedirs(checkpoint_dir) 
 with open(os.path.join(checkpoint_dir, 
-    'loss_acc_{}_{}'.format(start_epoch, start_epoch + args.num_epoches)), 'wb') as f:
+    'loss_acc_{}_{}.pkl'.format(start_epoch, start_epoch + args.num_epoches)), 'wb') as f:
     pickle.dump(training_curve, f) 
 
