@@ -66,7 +66,7 @@ def main():
     ax2 = ax1.twinx()
     line2 = ax2.plot(epoch_list, acc_list, label='Accuracy', color=colors[1])
     ax2.set_ylabel('Accuracy (%)')
-    ax2.set_ylim(40, 100)
+    ax2.set_ylim(0, 100)
 
     line1, label1 = ax1.get_legend_handles_labels()
     line2, label2 = ax2.get_legend_handles_labels()
