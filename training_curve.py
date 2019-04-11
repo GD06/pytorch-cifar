@@ -24,6 +24,7 @@ def main():
     loss_dict = {}
     acc_dict = {}
 
+    best_acc = 0
     for filename in glob.glob(os.path.join(args.log_dir, "loss_acc_*")):
         #print(filename)
 
@@ -34,6 +35,7 @@ def main():
             epoch = entry['epoch']
             loss = entry['loss']
             acc = entry['acc']
+            best_acc = max(best_acc, acc)
 
             if epoch in loss_dict:
                 loss_dict[epoch] = min(loss_dict[epoch], loss)
@@ -45,6 +47,7 @@ def main():
             else:
                 acc_dict[epoch] = acc
 
+    print('Best Accuracy (%):', best_acc)
     epoch_list = []
     loss_list = []
     acc_list = []
@@ -70,7 +73,9 @@ def main():
     ax2.legend(line1 + line2, label1 + label2, loc='lower left',
             bbox_to_anchor=(0, 1.0), ncol=2, frameon=False)
 
-    plt.savefig(os.path.join(args.log_dir, 'training_curve.pdf'),
+    output_filename = '{}_training_curve.pdf'.format(
+            args.log_dir.strip('/').split('/')[-1].lower())
+    plt.savefig(os.path.join(args.log_dir, output_filename),
             format='pdf')
 
 if __name__ == '__main__':
