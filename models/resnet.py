@@ -175,6 +175,13 @@ class SubResNet(nn.Module):
 def SubResNet18():
     return SubResNet(BasicBlock, [2,2,2,2])
 
+def SubResNet34():
+    return SubResNet(BasicBlock, [3,4,6,3])
+
+def SubResNet50():
+    return SubResNet(Bottleneck, [3,4,6,3])
+
+
 def ResNet18():
     return ResNet(BasicBlock, [2,2,2,2])
 

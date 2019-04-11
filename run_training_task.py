@@ -7,14 +7,20 @@ import subprocess
 from multiprocessing import Process, Queue 
 
 task_list = [
-        ['ResNet18', False, 128], 
-        ['SubResNet18', True, 128],
+#        ['ResNet18', False, 128], 
+#        ['SubResNet18', True, 128],
+#        ['ResNet34', False, 128],
+#        ['SubResNet34', True, 128],
+#        ['ResNet50', False, 128],
+#        ['SubResNet50', True, 128],
+        ['VGG16', False, 128],
+        ['SubVGG16', True, 128],
         ]
 
 training_stages = [
-        [20, 0.1],
-        [10, 0.01],
-        [10, 0.001],
+        [150, 0.1],
+        [100, 0.01],
+        [100, 0.001],
         ]
 
 def train_exec_(task_queue, gpu_id):

@@ -24,6 +24,8 @@ def _build_network(model_name):
     net = None 
     if model_name == 'VGG16':
         net = VGG('VGG16')
+    elif model_name == 'SubVGG16':
+        net = SubVGG('VGG16')
     elif model_name == 'ResNet18':
         net = ResNet18()
     elif model_name == 'ResNet34':
@@ -37,7 +39,11 @@ def _build_network(model_name):
     elif model_name == 'GoogLeNet':
         net = GoogLeNet()
     elif model_name == 'SubResNet18':
-        net = SubResNet18() 
+        net = SubResNet18()
+    elif model_name == 'SubResNet34':
+        net = SubResNet34() 
+    elif model_name == 'SubResNet50':
+        net = SubResNet50() 
 
     assert net != None
     return net 
