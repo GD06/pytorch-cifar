@@ -13,8 +13,12 @@ task_list = [
 #        ['SubResNet34', True, 128],
 #        ['ResNet50', False, 128],
 #        ['SubResNet50', True, 128],
-        ['VGG16', False, 128],
-        ['SubVGG16', True, 128],
+#        ['VGG16', False, 128],
+#        ['SubVGG16', True, 128],
+        ['GoogLeNet', False, 128],
+        ['SubGoogLeNet', True, 128],
+        ['MobileNetV2', False, 128],
+        ['SubMobileNetV2', True, 128],
         ]
 
 training_stages = [

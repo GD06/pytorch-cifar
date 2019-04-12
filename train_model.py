@@ -36,8 +36,12 @@ def _build_network(model_name):
         net = ResNet101()
     elif model_name == 'MobileNetV2':
         net = MobileNetV2()
+    elif model_name == 'SubMobileNetV2':
+        net = SubMobileNetV2() 
     elif model_name == 'GoogLeNet':
         net = GoogLeNet()
+    elif model_name == 'SubGoogLeNet':
+        net = SubGoogLeNet() 
     elif model_name == 'SubResNet18':
         net = SubResNet18()
     elif model_name == 'SubResNet34':
